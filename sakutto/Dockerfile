@@ -7,3 +7,5 @@ ENV PATH=$PATH:/root/.local/bin
 ADD pyproject.toml .
 ADD poetry.lock .
 RUN poetry install
+
+ENTRYPOINT ["poetry", "run"]
