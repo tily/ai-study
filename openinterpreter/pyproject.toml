@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "openinterpreter"
+version = "0.1.0"
+description = ""
+authors = ["tily"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+open-interpreter = "^0.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
