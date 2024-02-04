@@ -1,5 +1,13 @@
 ## OpenInterpreter 試す
 
+### 使い方
+
+```
+$ cat .env
+OPENAI_API_KEY=<Your OpenAI API Key here>
+
+$ docker compose run --rm app interpreter -y
+```
 
 ### 参考資料
 
