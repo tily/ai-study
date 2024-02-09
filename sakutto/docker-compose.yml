@@ -5,3 +5,6 @@ services:
     volumes:
       - .:/work
     env_file: .env
+    ports:
+      - 8501:8501
+    command: python3 -m streamlit run streamlit1.py
