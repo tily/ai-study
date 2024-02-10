@@ -9,15 +9,18 @@ from langchain.memory import ChatMessageHistory
 from langchain.memory import ConversationTokenBufferMemory
 from langchain_openai import ChatOpenAI
 
-SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
-SLACK_BOT_USER_ID = os.environ.get("SLACK_BOT_USER_ID")
-SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
+SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
+SLACK_APP_TOKEN = os.environ["SLACK_APP_TOKEN"]
+SLACK_BOT_USER_ID = os.environ["SLACK_BOT_USER_ID"]
+CONVERSATION_MAX_TOKEN = int(os.environ["CONVERSATION_MAX_TOKEN"])
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL") or "gpt-3.5-turbo"
+LOADING_MESSAGE = os.environ.get("LOADING_MESSAGE") or ":running: お待ちください…"
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 app = App(token=SLACK_BOT_TOKEN)
+llm = ChatOpenAI(model=OPENAI_MODEL)
 
 def convert_messages_to_chain(messages):
-    llm = ChatOpenAI(model="gpt-4")
     history = ChatMessageHistory()
 
     for message in messages:
@@ -29,7 +32,7 @@ def convert_messages_to_chain(messages):
     memory = ConversationTokenBufferMemory(
         llm=llm,
         chat_memory=history,
-        max_token_limit=5000,
+        max_token_limit=CONVERSATION_MAX_TOKEN,
     )
 
     return ConversationChain(memory=memory, llm=llm, verbose=False)
@@ -41,7 +44,7 @@ def app_mention(ack, event, client, say, logger):
     thread_ts = event["ts"]
     if "thread_ts" in event:
         thread_ts = event["thread_ts"]
-    said = say(text="お待ちください", thread_ts=thread_ts)
+    said = say(text=LOADING_MESSAGE, thread_ts=thread_ts)
 
     messages = [event]
     if "thread_ts" in event:
@@ -51,9 +54,7 @@ def app_mention(ack, event, client, say, logger):
         )["messages"]
 
     chain = convert_messages_to_chain(messages)
-    result = chain(event["text"])["response"]
-    text = f"<@{event["user"]}> {result}"
-
+    text = chain(event["text"])["response"]
     client.chat_update(channel=event["channel"], ts=said["ts"], text=text)
 
 if __name__ == "__main__":
