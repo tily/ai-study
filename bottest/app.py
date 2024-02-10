@@ -38,25 +38,21 @@ def convert_messages_to_chain(messages):
 def app_mention(ack, event, client, say, logger):
     logger.info(event)
 
-    user_id = event["user"]
     thread_ts = event["ts"]
-
     if "thread_ts" in event:
         thread_ts = event["thread_ts"]
-
     said = say(text="お待ちください", thread_ts=thread_ts)
 
+    messages = [event]
     if "thread_ts" in event:
-        messages += client.conversations_replies(
+        messages = client.conversations_replies(
             channel=event["channel"],
             ts=event["thread_ts"],
         )["messages"]
-    else:
-        messages = [event]
 
     chain = convert_messages_to_chain(messages)
     result = chain(event["text"])["response"]
-    text = f"<@{user_id}> {result}"
+    text = f"<@{event["user"]}> {result}"
 
     client.chat_update(channel=event["channel"], ts=said["ts"], text=text)
 
