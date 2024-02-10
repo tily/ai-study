@@ -37,23 +37,28 @@ def convert_messages_to_chain(messages):
 @app.event("app_mention")
 def app_mention(ack, event, client, say, logger):
     logger.info(event)
-    to = event["user"]
+
+    user_id = event["user"]
+    thread_ts = event["ts"]
 
     if "thread_ts" in event:
-        said = say(text="お待ちください", thread_ts=event["thread_ts"])
-        print(said)
-        ts = said["ts"]
-        messages = client.conversations_replies(
+        thread_ts = event["thread_ts"]
+
+    said = say(text="お待ちください", thread_ts=thread_ts)
+
+    if "thread_ts" in event:
+        messages += client.conversations_replies(
             channel=event["channel"],
             ts=event["thread_ts"],
         )["messages"]
-        chain = convert_messages_to_chain(messages)
-        result = chain(event["text"])["response"]
-        text = f"<@{to}> {result}"
-        client.chat_update(channel=event["channel"], ts=ts, text=text)
     else:
-        text = f"<@{to}> Hello"
-        say(text=text, thread_ts=event["ts"])
+        messages = [event]
+
+    chain = convert_messages_to_chain(messages)
+    result = chain(event["text"])["response"]
+    text = f"<@{user_id}> {result}"
+
+    client.chat_update(channel=event["channel"], ts=said["ts"], text=text)
 
 if __name__ == "__main__":
     SocketModeHandler(app, SLACK_APP_TOKEN).start()
