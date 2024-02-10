@@ -32,8 +32,7 @@ def convert_messages_to_chain(messages):
         max_token_limit=5000,
     )
 
-    #return ConversationChain(memory=memory, llm=llm, verbose=True)
-    return ConversationChain(memory=memory, llm=llm)
+    return ConversationChain(memory=memory, llm=llm, verbose=False)
 
 @app.event("app_mention")
 def app_mention(ack, event, client, say, logger):
@@ -52,7 +51,6 @@ def app_mention(ack, event, client, say, logger):
         result = chain(event["text"])["response"]
         text = f"<@{to}> {result}"
         client.chat_update(channel=event["channel"], ts=ts, text=text)
-        #say(text=text, thread_ts=event["thread_ts"])
     else:
         text = f"<@{to}> Hello"
         say(text=text, thread_ts=event["ts"])
