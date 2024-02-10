@@ -1,0 +1,7 @@
+version: "3"
+services:
+  app:
+    build: .
+    volumes:
+      - .:/work
+    env_file: .env
