@@ -10,6 +10,7 @@ from langchain_openai import ChatOpenAI
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain.tools import Tool
 from langchain.agents import initialize_agent
+from langchain.agents import AgentType
 
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
 SLACK_APP_TOKEN = os.environ["SLACK_APP_TOKEN"]
@@ -43,6 +44,8 @@ def convert_messages_to_memory(messages):
         llm=llm,
         chat_memory=history,
         max_token_limit=CONVERSATION_MAX_TOKEN,
+        memory_key="chat_history",
+        return_messages=True,
     )
 
 
@@ -63,7 +66,8 @@ async def app_mention(ack, event, client, say, logger):
         ))["messages"]
 
     memory = convert_messages_to_memory(messages)
-    text = agent.run({"input": event["text"], "chat_history": memory.load_memory_variables({})})
+    agent = initialize_agent(tools, llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION, verbose=True, memory=memory)
+    text = agent.run(event["text"])
     await client.chat_update(channel=event["channel"], ts=said["ts"], text=text)
 
 async def main():
