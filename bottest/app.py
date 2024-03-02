@@ -8,6 +8,8 @@ from langchain.memory import ChatMessageHistory
 from langchain.memory import ConversationTokenBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
+from langchain_community.tools.playwright.utils import create_async_playwright_browser
 from langchain.tools import Tool
 from langchain.agents import initialize_agent
 from langchain.agents import AgentType
@@ -22,14 +24,17 @@ LOADING_MESSAGE = os.environ.get("LOADING_MESSAGE") or ":running: お待ちく�
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 app = AsyncApp(token=SLACK_BOT_TOKEN)
 llm = ChatOpenAI(model=OPENAI_MODEL)
-tools = [
-        Tool(
-            name="duckduckgo-search",
-            func=DuckDuckGoSearchRun().run,
-            description="useful when you need to search or latest information in web",
-        ),
-]
-agent = initialize_agent(tools, llm, agent="chat-zero-shot-react-description", verbose=True)
+#tools = [
+#        Tool(
+#            name="duckduckgo-search",
+#            func=DuckDuckGoSearchRun().run,
+#            description="useful when you need to search or latest information in web",
+#        ),
+#]
+async_browser = create_async_playwright_browser()
+toolkit = PlayWrightBrowserToolkit.from_browser(async_browser=async_browser)
+tools = toolkit.get_tools()
+#agent = initialize_agent(tools, llm, agent="chat-zero-shot-react-description", verbose=True)
 
 def convert_messages_to_memory(messages):
     history = ChatMessageHistory()
@@ -66,7 +71,8 @@ async def app_mention(ack, event, client, say, logger):
         ))["messages"]
 
     memory = convert_messages_to_memory(messages)
-    agent = initialize_agent(tools, llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION, verbose=True, memory=memory)
+    #agent = initialize_agent(tools, llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION, verbose=True, memory=memory)
+    agent = initialize_agent(tools, llm, agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION, verbose=True, memory=memory)
     text = agent.run(event["text"])
     await client.chat_update(channel=event["channel"], ts=said["ts"], text=text)
 
