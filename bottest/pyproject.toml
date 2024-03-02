@@ -13,6 +13,9 @@ slack-bolt = "^1.18.1"
 langchain-openai = "^0.0.5"
 duckduckgo-search = "^4.4.1"
 langchain-community = "^0.0.19"
+playwright = "^1.41.2"
+lxml = "^5.1.0"
+beautifulsoup4 = "^4.12.3"
 
 
 [build-system]

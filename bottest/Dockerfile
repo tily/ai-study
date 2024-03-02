@@ -7,5 +7,7 @@ ENV PATH=$PATH:/root/.local/bin
 ADD pyproject.toml .
 ADD poetry.lock .
 RUN poetry install
+RUN poetry run playwright install
+RUN poetry run playwright install-deps
 
 ENTRYPOINT ["poetry", "run"]
